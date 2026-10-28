@@ -1,6 +1,6 @@
 # Bainpaint
 
-A MS-Paint-class desktop paint app built on [tinyjs](https://tinyjs.app/): a
+A Paint-style desktop paint app built on [tinyjs](https://tinyjs.app/): a
 txiki.js backend plus a system-webview frontend, ~5 MB shipped, no Electron, no
 Node, no ports.
 
@@ -12,7 +12,7 @@ line, curve, rectangle, ellipse, polygon (fill/outline options), text
 (8 fonts, 8–200 px), eyedropper, magnifier, and rectangular selection with
 marching ants.
 
-**Colors** — 28-swatch classic Windows-Paint palette, primary/secondary color
+**Colors** — 28-swatch classic palette, primary/secondary color
 model (right-drag paints secondary, `X` swaps), custom color picker (HSL/RGB),
 and 10 recent colors (persisted).
 
@@ -153,6 +153,9 @@ script.
 
 ## Notes
 
+- AI-assisted development: this application was developed with the assistance
+  of AI coding agents (Kilo). Some code was written, reviewed, and verified 
+  in an AI-assisted workflow.
 - App id: `com.handshape.bainpaint` (reverse-domain of handshape.com).
 - Animated GIFs import only their first frame (accepted limitation).
 - Sound effects use `tiny.audio.sampler` only; the Web Audio graph is never
