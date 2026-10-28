@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Print</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #fff; }
+  img { display: block; width: auto; height: auto; }
+</style>
+</head>
+<body>
+<img id="img" alt="">
+<script>
+  (async () => {
+    const img = document.getElementById('img');
+    let job = null;
+    try { job = await tiny.api.call('getPrintJob'); } catch (e) {}
+    if (!job || !job.path) { tiny.win.close(); return; }
+    img.onload = async () => {
+      try {
+        if (job.mode === 'pdf' && job.pdfPath) {
+          await tiny.win.printToPDF(job.pdfPath);
+        } else {
+          tiny.win.print();
+        }
+      } catch (e) { /* print cancelled */ }
+      setTimeout(() => tiny.win.close(), 600);
+    };
+    img.onerror = () => tiny.win.close();
+    img.src = tiny.fileURL(job.path);
+  })();
+</script>
+</body>
+</html>
