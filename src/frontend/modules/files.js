@@ -55,6 +55,36 @@
   }
   const extOf = (path) => { const m = String(path).match(/\.([a-z0-9]+)$/i); return m ? m[1].toLowerCase() : ''; };
 
+  // ---- drop target (drag & drop) ------------------------------------------
+  // Page-side highlight: the native onDrop callback reports only the paths, so
+  // the page tracks dragenter/dragleave to know when to show the hint. The
+  // native drop event still carries the file paths to onDropped().
+  let dropDepth = 0;
+  function initDropTarget(el) {
+    const over = (e) => {
+      e.preventDefault();
+      el.classList.add('bp-drop-active');
+    };
+    el.addEventListener('dragenter', (e) => {
+      e.preventDefault();
+      dropDepth++;
+      over(e);
+    });
+    el.addEventListener('dragover', over);
+    el.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      if (--dropDepth <= 0) {
+        dropDepth = 0;
+        el.classList.remove('bp-drop-active');
+      }
+    });
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropDepth = 0;
+      el.classList.remove('bp-drop-active');
+    });
+  }
+
   // ---- module -----------------------------------------------------------
   const files = {
     _autosaveTimer: null,
@@ -65,15 +95,57 @@
       BP.on('doc:changed', (doc) => {
         if (doc && doc.modified) this._scheduleAutosave();
       });
-      // Drag-drop open.
-      tiny.win.onDrop((paths) => {
-        if (paths && paths.length) this.openFile(paths[0]);
-      });
+      // Drag-drop import (never replaces the current document).
+      tiny.win.onDrop((paths) => this.onDropped(paths));
+      // Page-side highlight while a drag is over the window.
+      const el = typeof document !== 'undefined' && document.getElementById('stage');
+      if (el) initDropTarget(el);
       // Cold-start / OS "open with" files.
       tiny.app.onOpenFiles((paths) => {
         if (paths && paths.length) this.openFile(paths[0]);
       });
       // Note: recents are loaded explicitly (awaited) by app.js boot.
+    },
+
+    // ---- drop handling --------------------------------------------------
+    onDropped(paths) {
+      if (paths && paths.length) this.importFile(paths[0]);
+    },
+
+    async openImportDialog() {
+      const path = await tiny.dialog.openFile({ types: ['png', 'jpg', 'jpeg', 'bmp', 'gif'] });
+      if (path) this.importFile(path);
+    },
+
+    // Drop/import: decode the file and import it into the current doc at the
+    // active selection (or the center). Never replaces the document.
+    async importFile(path) {
+      const doc = BP.doc;
+      if (!doc) return;
+      try {
+        const img = await BP.formats.loadImage(path);
+        let w = img.naturalWidth, h = img.naturalHeight;
+        if (w > MAX || h > MAX) {
+          const ok = await tiny.dialog.confirm(
+            `Image is ${w}×${h}, larger than the ${MAX}×${MAX} limit.`,
+            { ok: 'Import scaled down', cancel: 'Cancel' });
+          if (!ok) return;
+          const scale = Math.min(MAX / w, MAX / h);
+          w = Math.max(1, Math.round(w * scale));
+          h = Math.max(1, Math.round(h * scale));
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const cctx = canvas.getContext('2d');
+        cctx.imageSmoothingEnabled = true;
+        cctx.drawImage(img, 0, 0, w, h);
+        BP.clipboard._canvas = canvas;
+        BP.clipboard.paste();
+        this._addRecent(path);
+      } catch (e) {
+        tiny.dialog.alert('Could not import file', { detail: String((e && e.message) || e) });
+      }
     },
 
     // ---- new / open -----------------------------------------------------

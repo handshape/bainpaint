@@ -53,6 +53,7 @@
     C.register('file:print', { run: () => doPrint('print'), enabled: () => !!doc() });
     C.register('file:pdf', { run: () => doPrint('pdf'), enabled: () => !!doc() });
     C.register('file:screenshot', { run: () => screenshotAsNew(), enabled: () => true });
+    C.register('file:import', { run: () => BP.files.openImportDialog(), enabled: () => true });
 
     // Edit
     C.register('edit:undo', { run: () => { if (doc()) BP.undo.undo(doc()); }, enabled: () => BP.undo.canUndo() });
@@ -126,6 +127,7 @@
         { id: 'file:print', label: 'Print…' },
         { id: 'file:pdf', label: 'Export PDF…' },
         { id: 'file:screenshot', label: 'Screenshot as New…' },
+        { id: 'file:import', label: 'Import Image…' },
       ] },
       { title: 'Edit', items: [
         { id: 'edit:undo', label: 'Undo', key: 'z' },
