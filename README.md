@@ -87,22 +87,51 @@ flowchart TB
     direction TB
     HTML["index.html"]
     subgraph libs["lib/ (BPLib, pure, no DOM)"]
-      budget & floodfill & bmpenc & resample & effects & palette
+      budget["budget.js"]
+      floodfill["floodfill.js"]
+      bmpenc["bmp-enc.js"]
+      resample["resample.js"]
+      effects["effects.js"]
+      palette["palette.js"]
     end
     subgraph modules["modules/ (window.BP, classic scripts)"]
       direction LR
-      bus & doc["document.js"] & view["view.js"] & undo["undo.js"]
-      ptr["pointer.js"] & cmds["commands.js"] & colors["colors.js"]
-      sel["selection.js"] & clip["clipboard.js"] & files["files.js"]
-      fx["effects.js"] & imgops["imageops.js"] & sfx["sfx.js"]
+      bus["bus.js"]
+      doc["document.js"]
+      view["view.js"]
+      undo["undo.js"]
+      ptr["pointer.js"]
+      cmds["commands.js"]
+      colors["colors.js"]
+      sel["selection.js"]
+      clip["clipboard.js"]
+      files["files.js"]
+      fx["effects.js"]
+      imgops["imageops.js"]
+      sfx["sfx.js"]
     end
     subgraph tools["tools/ (14 implementations)"]
-      pencil & brush & eraser & spray & fill
-      line & curve & rect & ellipse & polygon
-      text & eyedropper & magnifier & select
+      pencil["pencil"]
+      brush["brush"]
+      eraser["eraser"]
+      spray["spray"]
+      fill["fill"]
+      line["line"]
+      curve["curve"]
+      rect["rect"]
+      ellipse["ellipse"]
+      polygon["polygon"]
+      text["text"]
+      eyedropper["eyedropper"]
+      magnifier["magnifier"]
+      select["select"]
     end
     subgraph ui["ui/"]
-      toolbar & optionsbar & palette_ui & statusbar & dialogs
+      toolbar["toolbar"]
+      optionsbar["optionsbar"]
+      palette_ui["palette"]
+      statusbar["statusbar"]
+      dialogs["dialogs"]
     end
     appjs["app.js (boot, menu, shortcuts)"]
   end
@@ -112,15 +141,16 @@ flowchart TB
     b64js["b64.js — base64 decode"]
   end
 
-  HTML --> libs --> modules --> tools & ui
+  HTML --> libs
+  libs --> modules
+  modules --> tools
+  modules --> ui
   appjs --> modules
-  appjs --> "tiny.menu.set()"
-  appjs --> "tiny.api.call()"
 
-  modules -- "tiny.api.call('saveImage', {b64, i, n})" --> mainjs
-  modules -- "tiny.api.call('autosave*')" --> mainjs
+  modules -- "tiny.api.call(saveImage)" --> mainjs
+  modules -- "tiny.api.call(autosave)" --> mainjs
   mainjs --> b64js
-  mainjs -- "await tjs.writeFile" --> disk[("disk / app-data")]
+  mainjs -- "tjs.writeFile" --> disk[("disk / app-data")]
 
   tools -- "draw to doc.ctx" --> doc
   ptr -- "pointer events" --> tools
