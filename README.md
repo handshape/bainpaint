@@ -79,6 +79,62 @@ pnpm run build:ui   # re-vendor lucide + recompile tailwind.css
 
 Then commit `src/frontend/vendor/`.
 
+## Architecture
+
+```mermaid
+flowchart TB
+  subgraph page["Page (system webview, file://)"]
+    direction TB
+    HTML["index.html"]
+    subgraph libs["lib/ (BPLib, pure, no DOM)"]
+      budget & floodfill & bmpenc & resample & effects & palette
+    end
+    subgraph modules["modules/ (window.BP, classic scripts)"]
+      direction LR
+      bus & doc["document.js"] & view["view.js"] & undo["undo.js"]
+      ptr["pointer.js"] & cmds["commands.js"] & colors["colors.js"]
+      sel["selection.js"] & clip["clipboard.js"] & files["files.js"]
+      fx["effects.js"] & imgops["imageops.js"] & sfx["sfx.js"]
+    end
+    subgraph tools["tools/ (14 implementations)"]
+      pencil & brush & eraser & spray & fill
+      line & curve & rect & ellipse & polygon
+      text & eyedropper & magnifier & select
+    end
+    subgraph ui["ui/"]
+      toolbar & optionsbar & palette_ui & statusbar & dialogs
+    end
+    appjs["app.js (boot, menu, shortcuts)"]
+  end
+
+  subgraph backend["Backend (txiki.js / QuickJS)"]
+    mainjs["main.js — api"]
+    b64js["b64.js — base64 decode"]
+  end
+
+  HTML --> libs --> modules --> tools & ui
+  appjs --> modules
+  appjs --> "tiny.menu.set()"
+  appjs --> "tiny.api.call()"
+
+  modules -- "tiny.api.call('saveImage', {b64, i, n})" --> mainjs
+  modules -- "tiny.api.call('autosave*')" --> mainjs
+  mainjs --> b64js
+  mainjs -- "await tjs.writeFile" --> disk[("disk / app-data")]
+
+  tools -- "draw to doc.ctx" --> doc
+  ptr -- "pointer events" --> tools
+  undo -- "snapshot / restore" --> doc
+  sel -- "marching ants" --> view
+  view -- "CSS transform" --> HTML
+```
+
+**Key flows:**
+- **Draw:** pointer → active tool → `doc.ctx` (direct pixel write) → `undo.cover` (region snapshot) → on `up`: `undo.commit`
+- **Save:** `canvas.toBlob` → base64 → chunked ≤ 512 KB → `api.saveImage` → backend decodes → `tjs.writeFile` (`.part` → rename)
+- **Open:** `tiny.fileURL(path)` → `<img>` → `createDoc` → `setDoc` (adopts canvas element)
+- **Zoom/Pan:** CSS transform on `#doc-canvas`; overlay canvas (viewport-sized) redraws shape ghosts / ants via rAF
+
 ## Layout
 
 ```
