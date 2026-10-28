@@ -1,0 +1,9 @@
+{
+  "$schema": "https://tinyjs.app/schema/tinyjs.schema.json",
+  "name": "bainpaint",
+  "title": "Bainpaint",
+  "size": "960x640",
+  "id": "com.example.bainpaint",
+  "version": "0.1.0",
+  "minTinyjsVersion": "0.63.0"
+}

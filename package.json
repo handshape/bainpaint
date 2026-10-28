@@ -1,0 +1,19 @@
+{
+  "name": "bainpaint",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Bainpaint — a tinyjs desktop app",
+  "scripts": {
+    "vendor": "node tools/vendor.js",
+    "css": "tailwindcss -i tools/input.css -o src/frontend/vendor/tailwind.css --minify",
+    "css:watch": "tailwindcss -i tools/input.css -o src/frontend/vendor/tailwind.css --watch",
+    "build:ui": "node tools/vendor.js && tailwindcss -i tools/input.css -o src/frontend/vendor/tailwind.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.3",
+    "daisyui": "5.7.50",
+    "lucide": "1.62.0",
+    "tailwindcss": "4.3.3"
+  }
+}
